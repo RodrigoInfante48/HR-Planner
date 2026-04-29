@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Planner 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #00e6c7;
+    --teal-dim: #00b8a0;
+    --teal-bg: rgba(0,230,199,0.08);
+    --teal-bg2: rgba(0,230,199,0.15);
+    --gold: #FFB800;
+    --gold-bg: rgba(255,184,0,0.12);
+    --navy: #0d1117;
+    --navy2: #161b22;
+    --navy3: #21262d;
+    --navy4: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --red: #f85149;
+    --red-bg: rgba(248,81,73,0.12);
+    --green: #3fb950;
+    --green-bg: rgba(63,185,80,0.12);
+    --amber: #d29922;
+    --amber-bg: rgba(210,153,34,0.12);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--navy2);
+    border-bottom: 1px solid var(--navy4);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .topbar-brand .dot {
+    width: 8px; height: 8px;
+    background: var(--teal);
+    border-radius: 50%;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .tab {
+    padding: 6px 16px;
+    border-radius: var(--radius);
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .tab:hover { background: var(--navy3); color: var(--text); }
+  .tab.active { background: var(--teal-bg2); color: var(--teal); }
+
+  /* VIEWS */
+  .view { display: none; padding: 24px; }
+  .view.active { display: block; }
+
+  /* FORM VIEW */
+  .form-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .form-header {
+    margin-bottom: 28px;
+  }
+  .form-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .form-header p {
+    color: var(--text2);
+    font-size: 13px;
+  }
+
+  .form-card {
+    background: var(--navy2);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--navy3);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 9px 12px;
+    transition: border-color 0.15s;
+    outline: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--teal);
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6);
+    cursor: pointer;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .btn-primary {
+    background: var(--teal);
+    color: var(--navy);
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    width: 100%;
+  }
+  .btn-primary:hover { background: var(--teal-dim); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--text3); color: var(--text); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red-bg);
+    border-radius: var(--radius);
+    padding: 5px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-danger:hover { background: var(--red-bg); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--navy3);
+    border: 1px solid var(--teal);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--teal);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* REGISTROS TABLE */
+  .records-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .records-header h2 { font-size: 16px; font-weight: 600; }
+
+  .table-wrap {
+    background: var(--navy2);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--navy4);
+    background: var(--navy3);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--navy3);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+  .empty-state p { font-size: 13px; margin-top: 8px; }
+
+  /* GANTT VIEW */
+  .gantt-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .gantt-controls h2 { font-size: 16px; font-weight: 600; margin-right: auto; }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .month-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--teal);
+    min-width: 120px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .nav-btn {
+    background: var(--navy3);
+    border: 1px solid var(--navy4);
+    color: var(--text2);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { border-color: var(--teal); color: var(--teal); }
+
+  .gantt-wrap {
+    background: var(--navy2);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .gantt-table {
+    border-collapse: collapse;
+    min-width: 100%;
+  }
+
+  .gantt-table th, .gantt-table td {
+    border: none;
+    padding: 0;
+  }
+
+  .gantt-head-row th {
+    background: var(--navy3);
+    border-bottom: 1px solid var(--navy4);
+  }
+
+  .col-name {
+    min-width: 140px;
+    max-width: 140px;
+    padding: 10px 14px !important;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    position: sticky;
+    left: 0;
+    background: var(--navy3);
+    border-right: 1px solid var(--navy4);
+    z-index: 10;
+  }
+
+  .col-day {
+    width: 32px;
+    min-width: 32px;
+    text-align: center;
+    padding: 6px 0 !important;
+    border-left: 1px solid var(--navy3);
+  }
+  .col-day.weekend { background: rgba(255,255,255,0.02); }
+
+  .day-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    display: block;
+  }
+  .day-letter {
+    font-size: 9px;
+    color: var(--text3);
+    text-transform: uppercase;
+    display: block;
+    margin-top: 1px;
+  }
+  .col-day.today .day-num { color: var(--teal); font-weight: 600; }
+  .col-day.today .day-letter { color: var(--teal); }
+  .col-day.weekend .day-num { color: var(--navy4); }
+  .col-day.weekend .day-letter { color: var(--navy4); }
+
+  .gantt-row td {
+    border-bottom: 1px solid var(--navy3);
+    height: 38px;
+  }
+  .gantt-row:last-child td { border-bottom: none; }
+
+  .person-cell {
+    position: sticky;
+    left: 0;
+    background: var(--navy2);
+    border-right: 1px solid var(--navy4);
+    padding: 0 14px !important;
+    z-index: 5;
+  }
+  .gantt-row:hover .person-cell { background: var(--navy3); }
+
+  .person-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  .day-cell {
+    width: 32px;
+    min-width: 32px;
+    text-align: center;
+    border-left: 1px solid var(--navy3);
+    position: relative;
+    vertical-align: middle;
+  }
+  .day-cell.weekend { background: rgba(255,255,255,0.015); }
+
+  .event-block {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: default;
+    position: relative;
+  }
+  .event-block.approved { background: var(--green-bg); color: var(--green); }
+  .event-block.pending { background: var(--amber-bg); color: var(--amber); }
+  .event-block.rejected { background: var(--red-bg); color: var(--red); }
+
+  .event-block .tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    white-space: nowrap;
+    font-size: 11px;
+    color: var(--text);
+    z-index: 50;
+    min-width: 140px;
+    line-height: 1.6;
+    pointer-events: none;
+  }
+  .event-block:hover .tooltip { display: block; }
+
+  /* SIMULTANEOUS ROW */
+  .simul-row td {
+    background: var(--navy3);
+    border-top: 1px solid var(--navy4);
+    height: 28px;
+  }
+  .simul-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .simul-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .simul-count.over { color: var(--red); }
+  .simul-count.ok { color: var(--text3); }
+  .simul-count.warn { color: var(--amber); }
+
+  .limit-row td {
+    background: var(--navy3);
+    height: 24px;
+  }
+  .limit-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .limit-icon {
+    text-align: center;
+    font-size: 14px;
+  }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--navy2);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+  }
+  .stat-value.teal { color: var(--teal); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.text { color: var(--text); }
+
+  /* MONTH SELECTOR */
+  .month-select-wrap {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .month-select-wrap select {
+    width: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--teal);
+    background: var(--navy3);
+    border-color: var(--navy4);
+    padding: 5px 28px 5px 10px;
+  }
+
+  /* COLLABORATORS MANAGER */
+  .collab-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .collab-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--navy3);
+    border: 1px solid var(--navy4);
+    border-radius: 20px;
+    padding: 4px 10px 4px 12px;
+    font-size: 13px;
+  }
+  .collab-tag button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .collab-tag button:hover { color: var(--red); }
+  .add-collab-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .add-collab-row input {
+    flex: 1;
+    max-width: 260px;
+  }
+  .add-collab-row button {
+    background: var(--teal-bg2);
+    color: var(--teal);
+    border: 1px solid var(--teal);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .add-collab-row button:hover { background: var(--teal-bg); }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 600px) {
+    .row2 { grid-template-columns: 1fr; }
+    .view { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="dot"></div>
+    HR Planner 2026
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showView('gantt')">Gantt</button>
+    <button class="tab" onclick="showView('registro')">Registro</button>
+    <button class="tab" onclick="showView('nuevo')">+ Ausencia</button>
+    <button class="tab" onclick="showView('config')">Equipo</button>
+  </div>
+</div>
+
+<!-- GANTT VIEW -->
+<div id="view-gantt" class="view active">
+  <div class="gantt-controls">
+    <h2>Gantt de Ausencias</h2>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green-bg);border:1px solid var(--green)"></div>Aprobado</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--amber-bg);border:1px solid var(--amber)"></div>Pendiente</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red-bg);border:1px solid var(--red)"></div>Rechazado</div>
+    </div>
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+      <div class="month-label" id="month-label">—</div>
+      <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="stats-row"></div>
+  <div class="gantt-wrap"><div id="gantt-container"></div></div>
+</div>
+
+<!-- REGISTRO VIEW -->
+<div id="view-registro" class="view">
+  <div class="records-header">
+    <h2>Todos los registros</h2>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <select id="filter-estado" onchange="renderRegistros()" style="width:auto;font-size:13px;padding:6px 28px 6px 10px;">
+        <option value="">Todos los estados</option>
+        <option value="Aprobado">Aprobado</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Rechazado">Rechazado</option>
+      </select>
+      <select id="filter-tipo" onchange="renderRegistros()" style="width:auto;font-size:13px;padding:6px 28px 6px 10px;">
+        <option value="">Todos los tipos</option>
+      </select>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Colaborador</th>
+          <th>Tipo</th>
+          <th>Fecha inicio</th>
+          <th>Fecha fin</th>
+          <th>Días hábiles</th>
+          <th>Estado</th>
+          <th>Aprobado por</th>
+          <th>Notas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="registros-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- NUEVA AUSENCIA VIEW -->
+<div id="view-nuevo" class="view">
+  <div class="form-wrap">
+    <div class="form-header">
+      <h1>Nueva ausencia</h1>
+      <p>Registra una ausencia o permiso para un colaborador</p>
+    </div>
+
+    <div class="form-card">
+      <div class="field">
+        <label>Colaborador</label>
+        <select id="f-colaborador">
+          <option value="">Seleccionar colaborador...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tipo de ausencia</label>
+        <select id="f-tipo">
+          <option value="">Seleccionar tipo...</option>
+          <option>Vacaciones</option>
+          <option>Incapacidad</option>
+          <option>Calamidad doméstica</option>
+          <option>Cita médica</option>
+          <option>Día compensatorio</option>
+          <option>Permiso no remunerado</option>
+          <option>Duelo</option>
+          <option>Capacitación externa</option>
+          <option>Licencia maternidad/paternidad</option>
+          <option>Licencia matrimonio</option>
+          <option>Ausencia injustificada</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Fecha inicio</label>
+          <input type="date" id="f-inicio">
+        </div>
+        <div class="field">
+          <label>Fecha fin</label>
+          <input type="date" id="f-fin">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Estado</label>
+          <select id="f-estado">
+            <option>Aprobado</option>
+            <option>Pendiente</option>
+            <option>Rechazado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aprobado por</label>
+          <input type="text" id="f-aprobador" placeholder="Nombre del aprobador">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notas (opcional)</label>
+        <textarea id="f-notas" placeholder="Observaciones adicionales..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="guardarRegistro()">Guardar registro</button>
+  </div>
+</div>
+
+<!-- CONFIG VIEW -->
+<div id="view-config" class="view">
+  <div class="form-wrap">
+    <div class="form-header">
+      <h1>Configuración del equipo</h1>
+      <p>Administra los colaboradores y el límite de simultáneos</p>
+    </div>
+
+    <div class="form-card">
+      <div class="section-title">Colaboradores</div>
+      <div class="collab-list" id="collab-list"></div>
+      <div class="add-collab-row">
+        <input type="text" id="new-collab" placeholder="Nombre del colaborador" onkeydown="if(event.key==='Enter')addCollab()">
+        <button onclick="addCollab()">+ Agregar</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="section-title">Límite de simultáneos</div>
+      <div class="field">
+        <label>Máximo de personas off al mismo tiempo</label>
+        <input type="number" id="limite-simultaneos" min="1" max="20" value="3" style="max-width:100px" onchange="saveLimite()">
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:8px;">El Gantt marcará en rojo cuando se supere este número en cualquier día.</p>
+    </div>
+
+    <div class="form-card" style="border-color:var(--red-bg)">
+      <div class="section-title" style="color:var(--red)">Zona de peligro</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <p style="font-size:13px;font-weight:500;">Borrar todos los registros</p>
+          <p style="font-size:12px;color:var(--text3);margin-top:2px;">Esta acción no se puede deshacer</p>
+        </div>
+        <button class="btn-danger" onclick="clearAll()">Borrar todo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS = ['D','L','M','X','J','V','S'];
+const TIPO_ICONS = {
+  'Vacaciones':'✦','Incapacidad':'⚕','Calamidad doméstica':'⚠',
+  'Cita médica':'+','Día compensatorio':'↺','Permiso no remunerado':'○',
+  'Duelo':'◈','Capacitación externa':'◆','Licencia maternidad/paternidad':'❋',
+  'Licencia matrimonio':'◇','Ausencia injustificada':'✕'
+};
+
+let currentYear = 2026;
+let currentMonth = new Date().getMonth();
+
+function getData() {
+  return JSON.parse(localStorage.getItem('hrplanner_registros') || '[]');
+}
+function saveData(d) {
+  localStorage.setItem('hrplanner_registros', JSON.stringify(d));
+}
+function getCollabs() {
+  const def = ['Ana García','Luis Martínez','Sofía López','Carlos Pérez','María Torres',
+    'Diego Ramírez','Valentina Cruz','Andrés Gómez','Daniela Ruiz','Sebastián Díaz',
+    'Camila Vargas','Felipe Moreno','Laura Herrera','Julián Castro','Paola Jiménez'];
+  return JSON.parse(localStorage.getItem('hrplanner_collabs') || JSON.stringify(def));
+}
+function saveCollabs(c) {
+  localStorage.setItem('hrplanner_collabs', JSON.stringify(c));
+}
+function getLimite() {
+  return parseInt(localStorage.getItem('hrplanner_limite') || '3');
+}
+function saveLimite() {
+  const v = document.getElementById('limite-simultaneos').value;
+  localStorage.setItem('hrplanner_limite', v);
+  renderGantt();
+  toast('Límite actualizado');
+}
+
+function workdays(start, end) {
+  let count = 0;
+  let cur = new Date(start);
+  const e = new Date(end);
+  while (cur <= e) {
+    const d = cur.getDay();
+    if (d !== 0 && d !== 6) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  const tabs = {'gantt':0,'registro':1,'nuevo':2,'config':3};
+  document.querySelectorAll('.tab')[tabs[v]].classList.add('active');
+  if (v === 'gantt') renderGantt();
+  if (v === 'registro') renderRegistros();
+  if (v === 'nuevo') populateForm();
+  if (v === 'config') renderConfig();
+}
+
+function populateForm() {
+  const sel = document.getElementById('f-colaborador');
+  sel.innerHTML = '<option value="">Seleccionar colaborador...</option>';
+  getCollabs().forEach(c => {
+    const o = document.createElement('option');
+    o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+function guardarRegistro() {
+  const collab = document.getElementById('f-colaborador').value;
+  const tipo = document.getElementById('f-tipo').value;
+  const inicio = document.getElementById('f-inicio').value;
+  const fin = document.getElementById('f-fin').value;
+  const estado = document.getElementById('f-estado').value;
+  const aprobador = document.getElementById('f-aprobador').value;
+  const notas = document.getElementById('f-notas').value;
+
+  if (!collab || !tipo || !inicio || !fin) {
+    toast('Completa todos los campos requeridos', true);
+    return;
+  }
+  if (inicio > fin) {
+    toast('La fecha fin debe ser mayor que la de inicio', true);
+    return;
+  }
+
+  const data = getData();
+  data.push({
+    id: Date.now(),
+    colaborador: collab,
+    tipo, inicio, fin, estado,
+    aprobador: aprobador || '—',
+    notas: notas || '—',
+    dias: workdays(inicio, fin)
+  });
+  saveData(data);
+
+  document.getElementById('f-colaborador').value = '';
+  document.getElementById('f-tipo').value = '';
+  document.getElementById('f-inicio').value = '';
+  document.getElementById('f-fin').value = '';
+  document.getElementById('f-aprobador').value = '';
+  document.getElementById('f-notas').value = '';
+
+  toast('Registro guardado correctamente');
+  showView('gantt');
+}
+
+function deleteRecord(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const data = getData().filter(r => r.id !== id);
+  saveData(data);
+  renderRegistros();
+  toast('Registro eliminado');
+}
+
+function renderRegistros() {
+  const filterEstado = document.getElementById('filter-estado').value;
+  const filterTipo = document.getElementById('filter-tipo').value;
+  let data = getData();
+
+  // populate tipo filter
+  const tipos = [...new Set(getData().map(r => r.tipo))];
+  const tipoSel = document.getElementById('filter-tipo');
+  const curTipo = tipoSel.value;
+  tipoSel.innerHTML = '<option value="">Todos los tipos</option>';
+  tipos.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    if (t === curTipo) o.selected = true;
+    tipoSel.appendChild(o);
+  });
+
+  if (filterEstado) data = data.filter(r => r.estado === filterEstado);
+  if (filterTipo) data = data.filter(r => r.tipo === filterTipo);
+
+  const tbody = document.getElementById('registros-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><p>No hay registros aún.</p><p>Usa "+ Ausencia" para agregar uno.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map((r, i) => {
+    const bClass = r.estado === 'Aprobado' ? 'badge-green' : r.estado === 'Pendiente' ? 'badge-amber' : 'badge-red';
+    const fi = r.inicio ? r.inicio.split('-').reverse().join('/') : '—';
+    const ff = r.fin ? r.fin.split('-').reverse().join('/') : '—';
+    return `<tr>
+      <td style="color:var(--text3);font-family:'DM Mono',monospace">${i+1}</td>
+      <td style="font-weight:500">${r.colaborador}</td>
+      <td>${TIPO_ICONS[r.tipo] || '·'} ${r.tipo}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${fi}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${ff}</td>
+      <td style="text-align:center;font-family:'DM Mono',monospace">${r.dias}</td>
+      <td><span class="badge ${bClass}"><span class="badge-dot"></span>${r.estado}</span></td>
+      <td style="color:var(--text2)">${r.aprobador}</td>
+      <td style="color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notas}</td>
+      <td><button class="btn-danger" onclick="deleteRecord(${r.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderConfig() {
+  const collabs = getCollabs();
+  const list = document.getElementById('collab-list');
+  list.innerHTML = collabs.map(c => `
+    <div class="collab-tag">
+      ${c}
+      <button onclick="removeCollab('${c.replace(/'/g,"\\'")}')">×</button>
+    </div>`).join('');
+  document.getElementById('limite-simultaneos').value = getLimite();
+}
+
+function addCollab() {
+  const inp = document.getElementById('new-collab');
+  const name = inp.value.trim();
+  if (!name) return;
+  const collabs = getCollabs();
+  if (collabs.includes(name)) { toast('Ya existe ese colaborador', true); return; }
+  collabs.push(name);
+  saveCollabs(collabs);
+  inp.value = '';
+  renderConfig();
+  toast('Colaborador agregado');
+}
+
+function removeCollab(name) {
+  if (!confirm(`¿Eliminar a ${name} del equipo?`)) return;
+  const collabs = getCollabs().filter(c => c !== name);
+  saveCollabs(collabs);
+  renderConfig();
+  toast('Colaborador eliminado');
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar TODOS los registros? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem('hrplanner_registros');
+  toast('Registros borrados');
+  renderGantt();
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderGantt();
+}
+
+function renderGantt() {
+  const month = currentMonth;
+  const year = currentYear;
+  document.getElementById('month-label').textContent = `${MESES[month]} ${year}`;
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const collabs = getCollabs();
+  const data = getData();
+  const limite = getLimite();
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Stats
+  const monthData = data.filter(r => {
+    const start = new Date(r.inicio);
+    const end = new Date(r.fin);
+    const mStart = new Date(year, month, 1);
+    const mEnd = new Date(year, month + 1, 0);
+    return start <= mEnd && end >= mStart;
+  });
+  const statsEl = document.getElementById('stats-row');
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total ausencias</div><div class="stat-value text">${data.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Este mes</div><div class="stat-value teal">${monthData.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Aprobadas</div><div class="stat-value teal">${data.filter(r=>r.estado==='Aprobado').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Pendientes</div><div class="stat-value amber">${data.filter(r=>r.estado==='Pendiente').length}</div></div>
+  `;
+
+  // Build header
+  let headerCols = `<th class="col-name">Colaborador</th>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const dow = date.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    let cls = 'col-day';
+    if (isWeekend) cls += ' weekend';
+    if (isToday) cls += ' today';
+    headerCols += `<th class="${cls}"><span class="day-num">${d}</span><span class="day-letter">${DIAS[dow]}</span></th>`;
+  }
+
+  // Build rows
+  let rows = '';
+  for (const collab of collabs) {
+    let cells = `<td class="person-cell"><div class="person-name">${collab}</div></td>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const date = new Date(year, month, d);
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
+      if (isWeekend) {
+        cells += `<td class="day-cell weekend"></td>`;
+        continue;
+      }
+
+      const match = data.find(r =>
+        r.colaborador === collab &&
+        r.inicio <= dateStr &&
+        r.fin >= dateStr
+      );
+
+      if (match) {
+        const cls = match.estado === 'Aprobado' ? 'approved' : match.estado === 'Pendiente' ? 'pending' : 'rejected';
+        const icon = TIPO_ICONS[match.tipo] || '·';
+        cells += `<td class="day-cell">
+          <div class="event-block ${cls}">
+            <span style="font-size:10px">${icon}</span>
+            <div class="tooltip">
+              <strong>${collab}</strong><br>
+              ${match.tipo}<br>
+              ${match.estado}<br>
+              ${match.inicio} → ${match.fin}
+            </div>
+          </div>
+        </td>`;
+      } else {
+        cells += `<td class="day-cell"></td>`;
+      }
+    }
+    rows += `<tr class="gantt-row">${cells}</tr>`;
+  }
+
+  // Simultaneous row
+  let simultCells = `<td class="person-cell simul-label">⚠ Simultáneos</td>`;
+  let limitCells = `<td class="person-cell limit-label">● Límite (>${limite})</td>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const date = new Date(year, month, d);
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    if (isWeekend) {
+      simultCells += `<td class="day-cell weekend" style="background:rgba(255,255,255,0.015)"></td>`;
+      limitCells += `<td class="day-cell weekend" style="background:rgba(255,255,255,0.015)"></td>`;
+      continue;
+    }
+    const count = data.filter(r =>
+      r.estado !== 'Rechazado' &&
+      r.inicio <= dateStr &&
+      r.fin >= dateStr
+    ).length;
+    const cls = count === 0 ? 'ok' : count >= limite ? 'over' : count === limite - 1 ? 'warn' : 'ok';
+    const showCount = count > 0 ? count : '';
+    simultCells += `<td><div class="simul-count ${cls}" style="text-align:center;font-family:'DM Mono',monospace;font-size:11px;padding:4px 0">${showCount}</div></td>`;
+    limitCells += `<td class="limit-icon">${count >= limite ? '<span style="color:var(--red);font-size:12px">●</span>' : ''}</td>`;
+  }
+
+  const html = `<table class="gantt-table">
+    <thead>
+      <tr class="gantt-head-row">${headerCols}</tr>
+    </thead>
+    <tbody>
+      ${rows}
+      <tr class="simul-row">${simultCells}</tr>
+      <tr class="limit-row">${limitCells}</tr>
+    </tbody>
+  </table>`;
+
+  document.getElementById('gantt-container').innerHTML = html;
+}
+
+function toast(msg, error = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = error ? 'var(--red)' : 'var(--teal)';
+  el.style.color = error ? 'var(--red)' : 'var(--teal)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// INIT
+(function() {
+  const now = new Date();
+  currentMonth = now.getMonth();
+  currentYear = now.getFullYear();
+  if (currentYear < 2026) { currentYear = 2026; currentMonth = 0; }
+  renderGantt();
+})();
+</script>
+</body>
+</html>
