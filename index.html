@@ -924,6 +924,15 @@
       </div>
     </div>
 
+    <div class="form-card">
+      <div class="section-title">Webhook de backup automático</div>
+      <div class="field">
+        <label>URL del webhook</label>
+        <input type="url" id="webhook-url" placeholder="https://hooks.ejemplo.com/..." oninput="saveWebhookUrl()">
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:8px;">Cada vez que se guarden datos se enviará un POST con el snapshot completo (debounce 3 s). Deja en blanco para desactivar.</p>
+    </div>
+
     <div class="form-card" style="border-color:var(--red-bg)">
       <div class="section-title" style="color:var(--red)">Zona de peligro</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -977,6 +986,7 @@ function getData() {
 }
 function saveData(d) {
   localStorage.setItem('hrplanner_registros', JSON.stringify(d));
+  dispatchWebhookBackup();
 }
 function getCollabs() {
   const def = ['Ana García','Luis Martínez','Sofía López','Carlos Pérez','María Torres',
@@ -986,6 +996,7 @@ function getCollabs() {
 }
 function saveCollabs(c) {
   localStorage.setItem('hrplanner_collabs', JSON.stringify(c));
+  dispatchWebhookBackup();
 }
 function getLimite() {
   return parseInt(localStorage.getItem('hrplanner_limite') || '3');
@@ -993,8 +1004,37 @@ function getLimite() {
 function saveLimite() {
   const v = document.getElementById('limite-simultaneos').value;
   localStorage.setItem('hrplanner_limite', v);
+  dispatchWebhookBackup();
   renderGantt();
   toast('Límite actualizado');
+}
+
+function getWebhook() {
+  return localStorage.getItem('hrplanner_webhook') || '';
+}
+
+function saveWebhookUrl() {
+  const url = document.getElementById('webhook-url').value.trim();
+  localStorage.setItem('hrplanner_webhook', url);
+}
+
+let _webhookTimer = null;
+function dispatchWebhookBackup() {
+  const url = getWebhook();
+  if (!url) return;
+  clearTimeout(_webhookTimer);
+  _webhookTimer = setTimeout(() => {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        registros: getData(),
+        collabs: getCollabs(),
+        limite: getLimite()
+      })
+    }).catch(() => toast('Error al enviar backup al webhook', true));
+  }, 3000);
 }
 
 function workdays(start, end) {
@@ -1138,6 +1178,7 @@ function renderConfig() {
       <button onclick="removeCollab('${c.replace(/'/g,"\\'")}')">×</button>
     </div>`).join('');
   document.getElementById('limite-simultaneos').value = getLimite();
+  document.getElementById('webhook-url').value = getWebhook();
 }
 
 function addCollab() {
