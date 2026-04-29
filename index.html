@@ -620,9 +620,88 @@
     margin-bottom: 10px;
   }
 
-  @media (max-width: 600px) {
+  /* MOBILE BOTTOM NAV */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--navy2);
+    border-top: 1px solid var(--navy4);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 6px 4px;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-tab .m-icon { width: 20px; height: 20px; flex-shrink: 0; }
+  .mobile-tab:hover { color: var(--text2); }
+  .mobile-tab.active { color: var(--teal); }
+
+  @media (max-width: 768px) {
+    .tabs { display: none; }
+    .topbar { padding: 0 16px; height: 52px; }
+    .mobile-nav { display: flex; }
+    .view { padding: 14px 14px calc(68px + env(safe-area-inset-bottom)); }
+
+    /* Gantt controls */
+    .gantt-controls { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .gantt-controls h2 { margin-right: 0; font-size: 15px; }
+    .legend { gap: 8px; }
+    .legend-item { font-size: 10px; }
+    .month-nav { align-self: flex-start; }
+
+    /* Stats */
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat-card { padding: 10px 12px; }
+    .stat-value { font-size: 20px; }
+    .stat-label { font-size: 10px; }
+
+    /* Records header */
+    .records-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .records-header > div { width: 100%; display: flex; gap: 8px; }
+    .records-header > div select { flex: 1; font-size: 12px; }
+
+    /* Hide non-essential table columns */
+    .table-wrap th:nth-child(1), .table-wrap td:nth-child(1),
+    .table-wrap th:nth-child(4), .table-wrap td:nth-child(4),
+    .table-wrap th:nth-child(5), .table-wrap td:nth-child(5),
+    .table-wrap th:nth-child(6), .table-wrap td:nth-child(6),
+    .table-wrap th:nth-child(8), .table-wrap td:nth-child(8),
+    .table-wrap th:nth-child(9), .table-wrap td:nth-child(9) { display: none; }
+
+    td, th { padding: 8px 10px; }
+    td { font-size: 12px; }
+
+    /* Form */
     .row2 { grid-template-columns: 1fr; }
-    .view { padding: 16px; }
+    .form-card { padding: 16px; }
+    .form-header h1 { font-size: 18px; }
+    .form-header { margin-bottom: 20px; }
+
+    /* Config */
+    .add-collab-row { flex-wrap: wrap; }
+    .add-collab-row input { max-width: 100%; width: 100%; }
+
+    /* Toast above bottom nav */
+    .toast { bottom: 74px; right: 12px; left: 12px; text-align: center; }
   }
 </style>
 </head>
@@ -640,6 +719,39 @@
     <button class="tab" onclick="showView('config')">Equipo</button>
   </div>
 </div>
+
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-tab active" onclick="showView('gantt')">
+    <svg class="m-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="9" width="4" height="8" rx="1"/>
+      <rect x="8" y="6" width="4" height="11" rx="1" opacity=".7"/>
+      <rect x="14" y="3" width="4" height="14" rx="1" opacity=".5"/>
+    </svg>
+    Gantt
+  </button>
+  <button class="mobile-tab" onclick="showView('registro')">
+    <svg class="m-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="4" width="14" height="2" rx="1"/>
+      <rect x="3" y="9" width="14" height="2" rx="1" opacity=".7"/>
+      <rect x="3" y="14" width="9" height="2" rx="1" opacity=".5"/>
+    </svg>
+    Registro
+  </button>
+  <button class="mobile-tab" onclick="showView('nuevo')">
+    <svg class="m-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <rect x="9" y="3" width="2" height="14" rx="1"/>
+      <rect x="3" y="9" width="14" height="2" rx="1"/>
+    </svg>
+    Nueva
+  </button>
+  <button class="mobile-tab" onclick="showView('config')">
+    <svg class="m-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+      <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    Equipo
+  </button>
+</nav>
 
 <!-- GANTT VIEW -->
 <div id="view-gantt" class="view active">
@@ -880,9 +992,12 @@ function workdays(start, end) {
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mobile-tab').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
-  const tabs = {'gantt':0,'registro':1,'nuevo':2,'config':3};
-  document.querySelectorAll('.tab')[tabs[v]].classList.add('active');
+  const idx = {'gantt':0,'registro':1,'nuevo':2,'config':3};
+  document.querySelectorAll('.tab')[idx[v]].classList.add('active');
+  document.querySelectorAll('.mobile-tab')[idx[v]].classList.add('active');
+  window.scrollTo(0, 0);
   if (v === 'gantt') renderGantt();
   if (v === 'registro') renderRegistros();
   if (v === 'nuevo') populateForm();
