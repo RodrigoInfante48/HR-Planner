@@ -841,8 +841,8 @@ function saveLimite() {
 
 function workdays(start, end) {
   let count = 0;
-  let cur = new Date(start);
-  const e = new Date(end);
+  let cur = new Date(start + 'T12:00:00');
+  const e = new Date(end + 'T12:00:00');
   while (cur <= e) {
     const d = cur.getDay();
     if (d !== 0 && d !== 6) count++;
@@ -906,6 +906,7 @@ function guardarRegistro() {
   document.getElementById('f-tipo').value = '';
   document.getElementById('f-inicio').value = '';
   document.getElementById('f-fin').value = '';
+  document.getElementById('f-estado').value = 'Aprobado';
   document.getElementById('f-aprobador').value = '';
   document.getElementById('f-notas').value = '';
 
@@ -1034,10 +1035,10 @@ function renderGantt() {
   });
   const statsEl = document.getElementById('stats-row');
   statsEl.innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total ausencias</div><div class="stat-value text">${data.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total registros</div><div class="stat-value text">${data.length}</div></div>
     <div class="stat-card"><div class="stat-label">Este mes</div><div class="stat-value teal">${monthData.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Aprobadas</div><div class="stat-value teal">${data.filter(r=>r.estado==='Aprobado').length}</div></div>
-    <div class="stat-card"><div class="stat-label">Pendientes</div><div class="stat-value amber">${data.filter(r=>r.estado==='Pendiente').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Aprobadas (este mes)</div><div class="stat-value teal">${monthData.filter(r=>r.estado==='Aprobado').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Pendientes (este mes)</div><div class="stat-value amber">${monthData.filter(r=>r.estado==='Pendiente').length}</div></div>
   `;
 
   // Build header
@@ -1112,10 +1113,10 @@ function renderGantt() {
       r.inicio <= dateStr &&
       r.fin >= dateStr
     ).length;
-    const cls = count === 0 ? 'ok' : count >= limite ? 'over' : count === limite - 1 ? 'warn' : 'ok';
+    const cls = count === 0 ? 'ok' : count > limite ? 'over' : count === limite ? 'warn' : 'ok';
     const showCount = count > 0 ? count : '';
     simultCells += `<td><div class="simul-count ${cls}" style="text-align:center;font-family:'DM Mono',monospace;font-size:11px;padding:4px 0">${showCount}</div></td>`;
-    limitCells += `<td class="limit-icon">${count >= limite ? '<span style="color:var(--red);font-size:12px">●</span>' : ''}</td>`;
+    limitCells += `<td class="limit-icon">${count > limite ? '<span style="color:var(--red);font-size:12px">●</span>' : ''}</td>`;
   }
 
   const html = `<table class="gantt-table">
