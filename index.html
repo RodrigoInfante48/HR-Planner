@@ -840,6 +840,9 @@
       <select id="filter-tipo" onchange="renderRegistros()" style="width:auto;font-size:13px;padding:6px 28px 6px 10px;">
         <option value="">Todos los tipos</option>
       </select>
+      <button class="btn-ghost" onclick="exportarCSV()" style="font-size:13px;padding:6px 12px;white-space:nowrap;">↓ Guardar CSV</button>
+      <button class="btn-ghost" onclick="document.getElementById('csv-upload').click()" style="font-size:13px;padding:6px 12px;white-space:nowrap;">↑ Subir CSV</button>
+      <input type="file" id="csv-upload" accept=".csv" style="display:none" onchange="importarCSV(this)">
     </div>
   </div>
   <div class="table-wrap">
@@ -1417,6 +1420,63 @@ function toast(msg, error = false) {
   el.style.color = error ? 'var(--red)' : 'var(--teal)';
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function exportarCSV() {
+  const campos = ['id','colaborador','tipo','inicio','fin','estado','aprobador','notas','dias'];
+  const rows = getData().map(r => campos.map(c => {
+    const v = r[c] === undefined ? '' : String(r[c]);
+    return v.includes(',') || v.includes('"') || v.includes('\n') ? `"${v.replace(/"/g,'""')}"` : v;
+  }).join(','));
+  const csv = [campos.join(','), ...rows].join('\n');
+  const fecha = new Date().toISOString().slice(0, 10);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `hrplanner-registros-${fecha}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('CSV descargado');
+}
+
+function importarCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
+    if (!lines.length) { toast('El archivo está vacío', true); return; }
+    const header = lines[0].split(',').map(h => h.trim());
+    const required = ['id','colaborador','tipo','inicio','fin','estado','aprobador','notas','dias'];
+    const missing = required.filter(c => !header.includes(c));
+    if (missing.length) { toast(`Columnas faltantes: ${missing.join(', ')}`, true); return; }
+    const registros = [];
+    for (let i = 1; i < lines.length; i++) {
+      const vals = [];
+      let cur = '', inQ = false;
+      for (const ch of lines[i]) {
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { vals.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+      vals.push(cur);
+      if (vals.length < required.length) continue;
+      const obj = {};
+      header.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx].replace(/^"|"$/g,'').replace(/""/g,'"') : ''; });
+      obj.id = Number(obj.id) || Date.now();
+      obj.dias = Number(obj.dias) || 0;
+      registros.push(obj);
+    }
+    if (!registros.length) { toast('No se encontraron registros válidos', true); return; }
+    if (!confirm(`¿Reemplazar todos los registros actuales con los ${registros.length} del CSV?`)) return;
+    saveData(registros);
+    renderRegistros();
+    renderGantt();
+    toast(`${registros.length} registros importados`);
+  };
+  reader.onerror = () => toast('Error al leer el archivo', true);
+  reader.readAsText(file);
 }
 
 function descargarBackup() {
