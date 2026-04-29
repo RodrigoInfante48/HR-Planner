@@ -903,6 +903,27 @@
       <p style="font-size:12px;color:var(--text3);margin-top:8px;">El Gantt marcará en rojo cuando se supere este número en cualquier día.</p>
     </div>
 
+    <div class="form-card">
+      <div class="section-title">Backup y restauración</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <p style="font-size:13px;font-weight:500;">Descargar backup</p>
+            <p style="font-size:12px;color:var(--text2);margin-top:2px;">Exporta registros, colaboradores y límite a un archivo JSON</p>
+          </div>
+          <button onclick="descargarBackup()">↓ Descargar backup</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <p style="font-size:13px;font-weight:500;">Restaurar backup</p>
+            <p style="font-size:12px;color:var(--text2);margin-top:2px;">Carga un archivo JSON y reemplaza los datos actuales</p>
+          </div>
+          <button onclick="document.getElementById('input-restore').click()">↑ Restaurar backup</button>
+          <input type="file" id="input-restore" accept=".json" style="display:none" onchange="restaurarBackup(event)">
+        </div>
+      </div>
+    </div>
+
     <div class="form-card" style="border-color:var(--red-bg)">
       <div class="section-title" style="color:var(--red)">Zona de peligro</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -1286,6 +1307,50 @@ function toast(msg, error = false) {
   el.style.color = error ? 'var(--red)' : 'var(--teal)';
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function descargarBackup() {
+  const fecha = new Date().toISOString().slice(0, 10);
+  const payload = {
+    registros: getData(),
+    collabs: getCollabs(),
+    limite: getLimite()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `hrplanner-backup-${fecha}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Backup descargado');
+}
+
+function restaurarBackup(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let data;
+    try {
+      data = JSON.parse(e.target.result);
+    } catch {
+      toast('El archivo no es un JSON válido', true);
+      return;
+    }
+    if (!Array.isArray(data.registros) || !Array.isArray(data.collabs) || typeof data.limite === 'undefined') {
+      toast('El archivo no tiene el formato esperado', true);
+      return;
+    }
+    if (!confirm(`¿Restaurar backup? Se reemplazarán ${data.registros.length} registros y ${data.collabs.length} colaboradores. Esta acción no se puede deshacer.`)) return;
+    saveData(data.registros);
+    saveCollabs(data.collabs);
+    localStorage.setItem('hrplanner_limite', String(parseInt(data.limite) || 3));
+    renderConfig();
+    renderGantt();
+    toast('Backup restaurado correctamente');
+  };
+  reader.readAsText(file);
 }
 
 // INIT
