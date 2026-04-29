@@ -84,6 +84,9 @@
   }
   .tab:hover { background: var(--navy3); color: var(--text); }
   .tab.active { background: var(--teal-bg2); color: var(--teal); }
+  .tab-nuevo { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal); }
+  .tab-nuevo:hover { background: var(--teal-bg2); color: var(--teal); }
+  .tab-nuevo.active { background: var(--teal); color: var(--navy); }
 
   /* VIEWS */
   .view { display: none; padding: 24px; }
@@ -636,7 +639,7 @@
   <div class="tabs">
     <button class="tab active" onclick="showView('gantt')">Gantt</button>
     <button class="tab" onclick="showView('registro')">Registro</button>
-    <button class="tab" onclick="showView('nuevo')">+ Ausencia</button>
+    <button class="tab tab-nuevo" onclick="showView('nuevo')">+ Ausencia</button>
     <button class="tab" onclick="showView('config')">Equipo</button>
   </div>
 </div>
