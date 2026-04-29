@@ -655,6 +655,55 @@
   .mobile-tab:hover { color: var(--text2); }
   .mobile-tab.active { color: var(--teal); }
 
+  /* RESTORE MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,17,23,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-card {
+    background: var(--navy2);
+    border: 1px solid var(--navy4);
+    border-radius: var(--radius-lg);
+    padding: 28px 28px 24px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .modal-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--teal-bg2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .modal-desc {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .modal-actions .btn-primary { width: auto; flex: 1; }
+  .modal-actions .btn-ghost { flex: 1; }
+
   @media (max-width: 768px) {
     .tabs { display: none; }
     .topbar { padding: 0 16px; height: 52px; }
@@ -942,6 +991,23 @@
         </div>
         <button class="btn-danger" onclick="clearAll()">Borrar todo</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESTORE BACKUP MODAL -->
+<div class="modal-overlay" id="modal-restore">
+  <div class="modal-card">
+    <div class="modal-icon">↺</div>
+    <div class="modal-title">¿Restaurar desde último backup?</div>
+    <div class="modal-desc">No se encontraron datos locales. Si tienes un webhook de backup, pega la URL GET para recuperar tus registros. De lo contrario, empieza desde cero.</div>
+    <div class="field">
+      <label>URL del webhook GET de restauración</label>
+      <input type="url" id="modal-restore-url" placeholder="https://hooks.ejemplo.com/backup/get">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="cerrarModalRestore()">Empezar desde cero</button>
+      <button class="btn-primary" id="modal-restore-btn" onclick="confirmarRestore()">Restaurar</button>
     </div>
   </div>
 </div>
@@ -1394,6 +1460,40 @@ function restaurarBackup(event) {
   reader.readAsText(file);
 }
 
+function mostrarModalRestore() {
+  document.getElementById('modal-restore').style.display = 'flex';
+}
+
+function cerrarModalRestore() {
+  document.getElementById('modal-restore').style.display = 'none';
+}
+
+async function confirmarRestore() {
+  const url = document.getElementById('modal-restore-url').value.trim();
+  if (!url) { toast('Ingresa una URL de webhook', true); return; }
+  const btn = document.getElementById('modal-restore-btn');
+  btn.disabled = true;
+  btn.textContent = 'Restaurando...';
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data.registros) || !Array.isArray(data.collabs) || typeof data.limite === 'undefined') {
+      throw new Error('El JSON no tiene el formato esperado');
+    }
+    localStorage.setItem('hrplanner_registros', JSON.stringify(data.registros));
+    localStorage.setItem('hrplanner_collabs', JSON.stringify(data.collabs));
+    localStorage.setItem('hrplanner_limite', String(parseInt(data.limite) || 3));
+    cerrarModalRestore();
+    renderGantt();
+    toast(`Backup restaurado: ${data.registros.length} registros`);
+  } catch (err) {
+    toast('Error: ' + err.message, true);
+    btn.disabled = false;
+    btn.textContent = 'Restaurar';
+  }
+}
+
 // INIT
 (function() {
   const now = new Date();
@@ -1401,6 +1501,7 @@ function restaurarBackup(event) {
   currentYear = now.getFullYear();
   if (currentYear < 2026) { currentYear = 2026; currentMonth = 0; }
   renderGantt();
+  if (localStorage.getItem('hrplanner_registros') === null) mostrarModalRestore();
 })();
 </script>
 </body>
