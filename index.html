@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HR Planner 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <style>
   :root {
     --teal: #00e6c7;
@@ -770,6 +772,10 @@
     <button class="tab tab-nuevo" onclick="showView('nuevo')">+ Ausencia</button>
     <button class="tab" onclick="showView('config')">Equipo</button>
   </div>
+  <div id="sync-indicator" title="Estado de sincronización Firebase" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);white-space:nowrap;padding-left:12px;">
+    <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;transition:background 0.3s;"></span>
+    <span id="sync-label">Sin Firebase</span>
+  </div>
 </div>
 
 <nav class="mobile-nav" id="mobile-nav">
@@ -988,6 +994,27 @@
       <p style="font-size:12px;color:var(--text3);margin-top:8px;">Cada vez que se guarden datos se enviará un POST con el snapshot completo (debounce 3 s). Deja en blanco para desactivar.</p>
     </div>
 
+    <div class="form-card" style="border-color:var(--teal-bg2)">
+      <div class="section-title">Sincronización en tiempo real (Firebase)</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">Conecta Firebase Realtime Database para que todos los usuarios compartan los mismos datos. Cualquier cambio de uno se refleja al instante en los demás.</p>
+      <div class="field">
+        <label>Configuración Firebase (JSON)</label>
+        <textarea id="fb-config-json" rows="5" style="font-family:'DM Mono',monospace;font-size:11px;resize:vertical;background:var(--navy);color:var(--text);border:1px solid var(--navy4);border-radius:8px;padding:10px;width:100%;box-sizing:border-box;" placeholder='{"apiKey":"AIza...","databaseURL":"https://tu-proyecto-default-rtdb.firebaseio.com","projectId":"tu-proyecto","authDomain":"tu-proyecto.firebaseapp.com"}'></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+        <button onclick="guardarFbConfig()">Conectar</button>
+        <button onclick="desconectarFb()" style="background:transparent;border:1px solid var(--navy4);color:var(--text2);">Desconectar</button>
+        <span id="fb-status-label" style="font-size:12px;color:var(--text2);">—</span>
+      </div>
+      <p style="font-size:11px;color:var(--text2);margin-top:12px;line-height:1.6;">
+        <strong>Pasos:</strong><br>
+        1. Ve a <strong>console.firebase.google.com</strong> → Crear proyecto<br>
+        2. Realtime Database → Crear base de datos → Modo de prueba<br>
+        3. Configuración del proyecto (⚙) → Tus apps → Web → Copiar el objeto <code>firebaseConfig</code><br>
+        4. Pega el JSON aquí y pulsa Conectar
+      </p>
+    </div>
+
     <div class="form-card" style="border-color:var(--red-bg)">
       <div class="section-title" style="color:var(--red)">Zona de peligro</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -1053,32 +1080,138 @@ const TIPO_ICONS = {
 let currentYear = 2026;
 let currentMonth = new Date().getMonth();
 
-function getData() {
-  return JSON.parse(localStorage.getItem('hrplanner_registros') || '[]');
+const _COLLABS_DEFAULT = ['Ana García','Luis Martínez','Sofía López','Carlos Pérez','María Torres',
+  'Diego Ramírez','Valentina Cruz','Andrés Gómez','Daniela Ruiz','Sebastián Díaz',
+  'Camila Vargas','Felipe Moreno','Laura Herrera','Julián Castro','Paola Jiménez'];
+
+let _cache = {
+  registros: JSON.parse(localStorage.getItem('hrplanner_registros') || '[]'),
+  collabs: JSON.parse(localStorage.getItem('hrplanner_collabs') || JSON.stringify(_COLLABS_DEFAULT)),
+  limite: parseInt(localStorage.getItem('hrplanner_limite') || '3')
+};
+
+let _fbRef = null;
+let _fbInitialized = false;
+
+function setSyncIndicator(state) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  const statusLabel = document.getElementById('fb-status-label');
+  if (!dot || !label) return;
+  const estados = {
+    connected:    { color: 'var(--green)',  text: 'Sincronizado',    status: 'Conectado y sincronizado' },
+    connecting:   { color: 'var(--amber)',  text: 'Conectando…',     status: 'Conectando a Firebase…' },
+    error:        { color: 'var(--red)',    text: 'Error Firebase',   status: 'Error de conexión' },
+    offline:      { color: 'var(--text2)', text: 'Sin Firebase',     status: '—' }
+  };
+  const s = estados[state] || estados.offline;
+  dot.style.background = s.color;
+  label.textContent = s.text;
+  if (statusLabel) statusLabel.textContent = s.status;
 }
+
+function getFbConfig() {
+  try { return JSON.parse(localStorage.getItem('hrplanner_fbconfig') || 'null'); } catch { return null; }
+}
+
+function initFirebase() {
+  const cfg = getFbConfig();
+  if (!cfg || !cfg.databaseURL) return false;
+  if (_fbInitialized) return true;
+  setSyncIndicator('connecting');
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    const db = firebase.database();
+    _fbRef = db.ref('hrplanner');
+    _fbRef.on('value', snapshot => {
+      const data = snapshot.val();
+      if (data && Array.isArray(data.registros)) {
+        _cache.registros = data.registros;
+        _cache.collabs = Array.isArray(data.collabs) ? data.collabs : _cache.collabs;
+        _cache.limite = parseInt(data.limite) || _cache.limite;
+        const activeView = document.querySelector('.view.active');
+        if (activeView) {
+          const v = activeView.id.replace('view-', '');
+          if (v === 'gantt') renderGantt();
+          else if (v === 'registro') renderRegistros();
+          else if (v === 'config') renderConfig();
+        }
+      }
+      setSyncIndicator('connected');
+    }, () => setSyncIndicator('error'));
+    firebase.database().ref('.info/connected').on('value', snap => {
+      if (!snap.val()) setSyncIndicator('connecting');
+    });
+    _fbInitialized = true;
+    return true;
+  } catch(e) {
+    setSyncIndicator('error');
+    toast('Error al conectar Firebase: ' + e.message, true);
+    return false;
+  }
+}
+
+function guardarFbConfig() {
+  const raw = document.getElementById('fb-config-json').value.trim();
+  if (!raw) { toast('Pega la configuración Firebase primero', true); return; }
+  let cfg;
+  try { cfg = JSON.parse(raw); } catch { toast('El JSON no es válido', true); return; }
+  if (!cfg.databaseURL) { toast('Falta el campo databaseURL en la configuración', true); return; }
+  localStorage.setItem('hrplanner_fbconfig', JSON.stringify(cfg));
+  _fbInitialized = false;
+  _fbRef = null;
+  if (firebase.apps.length) firebase.apps.forEach(app => app.delete());
+  initFirebase();
+  toast('Configuración guardada — conectando…');
+}
+
+function desconectarFb() {
+  if (!confirm('¿Desconectar Firebase? Los datos locales se mantendrán pero dejarán de sincronizarse.')) return;
+  localStorage.removeItem('hrplanner_fbconfig');
+  _fbRef = null;
+  _fbInitialized = false;
+  setSyncIndicator('offline');
+  document.getElementById('fb-config-json').value = '';
+  toast('Firebase desconectado');
+}
+
+function getData() { return _cache.registros; }
+
 function saveData(d) {
-  localStorage.setItem('hrplanner_registros', JSON.stringify(d));
-  dispatchWebhookBackup();
+  _cache.registros = d;
+  persistir();
 }
-function getCollabs() {
-  const def = ['Ana García','Luis Martínez','Sofía López','Carlos Pérez','María Torres',
-    'Diego Ramírez','Valentina Cruz','Andrés Gómez','Daniela Ruiz','Sebastián Díaz',
-    'Camila Vargas','Felipe Moreno','Laura Herrera','Julián Castro','Paola Jiménez'];
-  return JSON.parse(localStorage.getItem('hrplanner_collabs') || JSON.stringify(def));
-}
+
+function getCollabs() { return _cache.collabs; }
+
 function saveCollabs(c) {
-  localStorage.setItem('hrplanner_collabs', JSON.stringify(c));
-  dispatchWebhookBackup();
+  _cache.collabs = c;
+  persistir();
 }
-function getLimite() {
-  return parseInt(localStorage.getItem('hrplanner_limite') || '3');
-}
+
+function getLimite() { return _cache.limite; }
+
 function saveLimite() {
-  const v = document.getElementById('limite-simultaneos').value;
-  localStorage.setItem('hrplanner_limite', v);
-  dispatchWebhookBackup();
+  _cache.limite = parseInt(document.getElementById('limite-simultaneos').value) || 3;
+  persistir();
   renderGantt();
   toast('Límite actualizado');
+}
+
+function persistir() {
+  if (_fbRef) {
+    _fbRef.set({
+      registros: _cache.registros,
+      collabs: _cache.collabs,
+      limite: _cache.limite,
+      updatedAt: new Date().toISOString()
+    }).catch(e => toast('Error al guardar en Firebase: ' + e.message, true));
+  } else {
+    localStorage.setItem('hrplanner_registros', JSON.stringify(_cache.registros));
+    localStorage.setItem('hrplanner_collabs', JSON.stringify(_cache.collabs));
+    localStorage.setItem('hrplanner_limite', String(_cache.limite));
+    dispatchWebhookBackup();
+  }
 }
 
 function getWebhook() {
@@ -1251,6 +1384,10 @@ function renderConfig() {
     </div>`).join('');
   document.getElementById('limite-simultaneos').value = getLimite();
   document.getElementById('webhook-url').value = getWebhook();
+  const fbCfg = getFbConfig();
+  const fbJson = document.getElementById('fb-config-json');
+  if (fbJson && fbCfg) fbJson.value = JSON.stringify(fbCfg, null, 2);
+  setSyncIndicator(_fbInitialized ? 'connected' : 'offline');
 }
 
 function addCollab() {
@@ -1276,7 +1413,7 @@ function removeCollab(name) {
 
 function clearAll() {
   if (!confirm('¿Borrar TODOS los registros? Esta acción no se puede deshacer.')) return;
-  localStorage.removeItem('hrplanner_registros');
+  saveData([]);
   toast('Registros borrados');
   renderGantt();
 }
@@ -1513,9 +1650,10 @@ function restaurarBackup(event) {
       return;
     }
     if (!confirm(`¿Restaurar backup? Se reemplazarán ${data.registros.length} registros y ${data.collabs.length} colaboradores. Esta acción no se puede deshacer.`)) return;
-    saveData(data.registros);
-    saveCollabs(data.collabs);
-    localStorage.setItem('hrplanner_limite', String(parseInt(data.limite) || 3));
+    _cache.registros = data.registros;
+    _cache.collabs = data.collabs;
+    _cache.limite = parseInt(data.limite) || 3;
+    persistir();
     renderConfig();
     renderGantt();
     toast('Backup restaurado correctamente');
@@ -1544,9 +1682,10 @@ async function confirmarRestore() {
     if (!Array.isArray(data.registros) || !Array.isArray(data.collabs) || typeof data.limite === 'undefined') {
       throw new Error('El JSON no tiene el formato esperado');
     }
-    localStorage.setItem('hrplanner_registros', JSON.stringify(data.registros));
-    localStorage.setItem('hrplanner_collabs', JSON.stringify(data.collabs));
-    localStorage.setItem('hrplanner_limite', String(parseInt(data.limite) || 3));
+    _cache.registros = data.registros;
+    _cache.collabs = data.collabs;
+    _cache.limite = parseInt(data.limite) || 3;
+    persistir();
     cerrarModalRestore();
     renderGantt();
     toast(`Backup restaurado: ${data.registros.length} registros`);
@@ -1564,7 +1703,10 @@ async function confirmarRestore() {
   currentYear = now.getFullYear();
   if (currentYear < 2026) { currentYear = 2026; currentMonth = 0; }
   renderGantt();
-  if (localStorage.getItem('hrplanner_registros') === null) mostrarModalRestore();
+  const fbConectado = initFirebase();
+  if (!fbConectado && localStorage.getItem('hrplanner_registros') === null) {
+    mostrarModalRestore();
+  }
 })();
 </script>
 </body>
