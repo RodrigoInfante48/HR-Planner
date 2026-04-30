@@ -1007,11 +1007,7 @@
         <span id="fb-status-label" style="font-size:12px;color:var(--text2);">—</span>
       </div>
       <p style="font-size:11px;color:var(--text2);margin-top:12px;line-height:1.6;">
-        <strong>Pasos:</strong><br>
-        1. Ve a <strong>console.firebase.google.com</strong> → Crear proyecto<br>
-        2. Realtime Database → Crear base de datos → Modo de prueba<br>
-        3. Configuración del proyecto (⚙) → Tus apps → Web → Copiar el objeto <code>firebaseConfig</code><br>
-        4. Pega el JSON aquí y pulsa Conectar
+        La app se conecta automáticamente al abrir. Solo usa este campo si quieres sobreescribir con otra base de datos.
       </p>
     </div>
 
@@ -1084,6 +1080,16 @@ const _COLLABS_DEFAULT = ['Ana García','Luis Martínez','Sofía López','Carlos
   'Diego Ramírez','Valentina Cruz','Andrés Gómez','Daniela Ruiz','Sebastián Díaz',
   'Camila Vargas','Felipe Moreno','Laura Herrera','Julián Castro','Paola Jiménez'];
 
+const _FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAFf2_cEQyNv912rWR1d0sbc6oWlNsp9yE",
+  authDomain: "hr-planner-ddi.firebaseapp.com",
+  databaseURL: "https://hr-planner-ddi-default-rtdb.firebaseio.com",
+  projectId: "hr-planner-ddi",
+  storageBucket: "hr-planner-ddi.firebasestorage.app",
+  messagingSenderId: "914284191167",
+  appId: "1:914284191167:web:f1cd2b7f399c0d2d76950a"
+};
+
 let _cache = {
   registros: JSON.parse(localStorage.getItem('hrplanner_registros') || '[]'),
   collabs: JSON.parse(localStorage.getItem('hrplanner_collabs') || JSON.stringify(_COLLABS_DEFAULT)),
@@ -1111,7 +1117,10 @@ function setSyncIndicator(state) {
 }
 
 function getFbConfig() {
-  try { return JSON.parse(localStorage.getItem('hrplanner_fbconfig') || 'null'); } catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('hrplanner_fbconfig') || 'null');
+    return stored || _FIREBASE_CONFIG;
+  } catch { return _FIREBASE_CONFIG; }
 }
 
 function initFirebase() {
